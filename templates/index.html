@@ -25,6 +25,17 @@
 
                 <button type="submit">Shorten URL</button>
             </form>
+
+            {% if short_url %}
+                <div class="result">
+                    <h2>Your Short URL</h2>
+
+                    <a href="{{ short_url }}" target="blank">
+                        {{ short_url}}
+                    </a>
+                </div>
+            {% endif %}
+
         </div>
     </body>
 </html>
