@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from urllib.parse import urlparse
 
 import random
@@ -45,6 +45,15 @@ def save_url(original_url, short_code):
     connection.commit()
     connection.close()
 
+def short_code_exists(short_code):
+    connection = sqlite3.connect("urls.db")
+
+    result = connection.execute("SELECT id FROM urls WHERE short_code = ?", (short_code,)).fetchone()
+
+    connection.close()
+    return result is not None
+
+
 @app.route("/", methods=["GET" , "POST"])
 def home():
 
@@ -59,6 +68,9 @@ def home():
 
         short_code = gen_short_code()
 
+        while short_code_exists(short_code):
+            short_code = gen_short_code()
+
         save_url(url, short_code)
 
         short_url = f"http://127.0.0.1:5000/{short_code}"
@@ -69,6 +81,19 @@ def home():
         print("Short Code : ", short_code)
             
     return render_template("index.html")
+
+@app.route("/<short_code>")
+def redirect_url(short_code):
+    connection = sqlite3.connect("urls.db")
+
+    result = connection.execute("SELECT original_url FROM urls WHERE short_code = ?", (short_code,)).fetchone()
+
+    connection.close()
+
+    if result:
+        return redirect(result[0])
+
+    return "Short URL not found." , 404
 
 init_db()
 
