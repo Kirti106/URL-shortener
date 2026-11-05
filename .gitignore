@@ -2,3 +2,6 @@ venv/
 __pycache__/
 *.pyc
 .env
+urls.db
+urls_backup.db
+urls_before_dashboard.db

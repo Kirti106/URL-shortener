@@ -15,6 +15,26 @@
             <h1>URL Shortener</h1>
             <p>Convert your long URL into a short, easy-to-share link.</p>
 
+            {% if session.get('user_id') %}
+
+                <p>
+                    Welcome, {{ session.get('username') }}!
+                    |
+                    <a href="{{ url_for('dashboard') }}">My Dashboard</a>
+                    |
+                    <a href="{{ url_for('logout') }}">Logout</a>
+                </p>
+
+            {% else %}
+
+                <p class="auth-link">
+                    <a href="{{ url_for('login') }}">Login</a>
+                    |
+                    <a href="{{ url_for('register') }}">Create an account</a>
+                </p>
+
+            {% endif %}
+
             {% if error %}
             <p class="error">{{ error }}</p>
             {% endif %}
