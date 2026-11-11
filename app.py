@@ -11,6 +11,8 @@ import string
 
 import sqlite3
 
+import os
+import qrcode
 
 app = Flask(__name__)
 app.secret_key = "dev-only-change-this-secret-key"
@@ -279,7 +281,24 @@ def home():
 
         short_url = f"http://127.0.0.1:5000/{short_code}"
 
-        return render_template("index.html", short_url=short_url)
+        # Generate QR code for the shortened URL
+        qr_folder = os.path.join("static", "qrcodes")
+        os.makedirs(qr_folder, exist_ok=True)
+
+        qr = qrcode.make(short_url)
+
+        qr_filename = f"{short_code}.png"
+        qr_path = os.path.join(qr_folder, qr_filename)
+
+        qr.save(qr_path)
+
+        qr_code_url = f"/static/qrcodes/{qr_filename}"
+
+        return render_template(
+            "index.html",
+            short_url=short_url,
+            qr_code_url=qr_code_url
+        )
 
         print("Valid URL : ",url)
         print("Short Code : ", short_code)

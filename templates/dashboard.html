@@ -1,129 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>My Dashboard | URL Shortener</title>
+    <title>Dashboard | Linkly</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="dashboard-page">
 
-    <div class="container">
+    <div class="dashboard-layout">
 
-        <h1>My Dashboard</h1>
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
 
-        <p>Welcome, {{ session.get('username') }}!</p>
+            <a href="{{ url_for('home') }}" class="brand">
+                <span class="brand-icon">↗</span>
+                <span>Linkly<span class="brand-dot">.</span></span>
+            </a>
 
-        <p>
-            <a href="{{ url_for('home') }}">Shorten another URL</a>
-            |
-            <a href="{{ url_for('logout') }}">Logout</a>
-        </p>
+            <div class="sidebar-section">
+                <p class="sidebar-label">WORKSPACE</p>
 
-        <div class="analytics-summary">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-link active">
+                    <span>▦</span> Overview
+                </a>
 
-            <div class="analytics-card">
-                <h3>Total Links</h3>
-                <p>{{ total_links }}</p>
+                <a href="{{ url_for('home') }}" class="sidebar-link">
+                    <span>↗</span> Create Short Link
+                </a>
             </div>
 
-            <div class="analytics-card">
-                <h3>Total Clicks</h3>
-                <p>{{ total_clicks }}</p>
-            </div>
+            <div class="sidebar-bottom">
+                <div class="profile-box">
+                    <div class="profile-avatar">
+                        {{ session.get('username', 'U')[0] | upper }}
+                    </div>
 
-        </div>
-
-        <h2>My URL History</h2>
-
-        <div class="search-box">
-            <input
-                type="text"
-                id="urlSearch"
-                placeholder="Search by original URL or short code..."
-                oninput="filterUrls()"
-            >
-        </div>
-
-        <p id="searchMessage"></p>
-
-        {% if urls %}
-
-            {% for url in urls %}
-
-                <div class="result url-card"
-                    data-search="{{ (url[1] ~ ' ' ~ url[2]) | lower }}">
-                    <p><strong>Original URL:</strong></p>
-
-                    <p>
-                        <a href="{{ url[1] }}" target="_blank" rel="noopener noreferrer">
-                            {{ url[1] }}
-                        </a>
-                    </p>
-
-                    <p><strong>Short URL:</strong></p>
-
-                    <p>
-                        <a href="{{ base_url }}/{{ url[2] }}"
-                           target="_blank" rel="noopener noreferrer">
-                            {{ base_url }}/{{ url[2] }}
-                        </a>
-                    </p>
-
-                    <button
-                        type="button"
-                        class="copy-btn"
-                        data-url="{{ base_url }}/{{ url[2] }}"
-                        onclick="copyShortUrl(this)"
-                    >
-                        Copy Short URL
-                    </button>
-
-                    <p>
-                        <strong>Created:</strong>
-                        {{ url[3] or "Not available" }}
-                    </p>
-
-                    <p>
-                        <strong>Expires:</strong>
-                        {{ url[4] or "Never" }}
-                    </p>
-
-                    <p class="click-count">
-                        <strong>Total Clicks:</strong>
-                        {{ url[5] }}
-                    </p>
-
-                    <form method="POST"
-                        action="{{ url_for('delete_url', url_id=url[0]) }}"
-                        onsubmit="return confirm('Are you sure you want to delete this URL?');">
-
-                        <button type="submit" class="delete-btn">
-                            Delete URL
-                        </button>
-
-                    </form>
-
+                    <div class="profile-info">
+                        <strong>{{ session.get('username') }}</strong>
+                        <span>Personal workspace</span>
+                    </div>
                 </div>
 
-            {% endfor %}
+                <a href="{{ url_for('logout') }}" class="sidebar-logout">
+                    ↪ Logout
+                </a>
+            </div>
 
-        {% else %}
+        </aside>
 
-            <p>You haven't created any URLs yet.</p>
 
-            <a href="{{ url_for('home') }}">Create your first short URL</a>
+        <!-- Main Content -->
+        <main class="dashboard-main">
 
-        {% endif %}
+            <header class="dashboard-topbar">
+                <div>
+                    <p class="breadcrumb">Workspace / Overview</p>
+                    <h1>Dashboard</h1>
+                </div>
+
+                <a href="{{ url_for('home') }}" class="create-button">
+                    + Create new link
+                </a>
+            </header>
+
+
+            <!-- Welcome -->
+            <section class="dashboard-welcome">
+                <div>
+                    <p class="welcome-eyebrow">YOUR LINK MANAGEMENT SPACE</p>
+                    <h2>Welcome back, {{ session.get('username') }}!</h2>
+                    <p>Here's an overview of your shortened links and their performance.</p>
+                </div>
+
+                <div class="welcome-decoration">↗</div>
+            </section>
+
+
+            <!-- Analytics -->
+            <section class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <span>Total Links</span>
+                        <span class="stat-icon purple">↗</span>
+                    </div>
+
+                    <h2>{{ total_links }}</h2>
+                    <p>Your created short links</p>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <span>Total Clicks</span>
+                        <span class="stat-icon green">⌁</span>
+                    </div>
+
+                    <h2>{{ total_clicks }}</h2>
+                    <p>Total visits across your links</p>
+                </div>
+
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <span>Average Clicks</span>
+                        <span class="stat-icon blue">◷</span>
+                    </div>
+
+                    <h2>
+                        {{ "%.1f"|format(total_clicks / total_links if total_links else 0) }}
+                    </h2>
+                    <p>Clicks per shortened link</p>
+                </div>
+
+            </section>
+
+
+            <!-- URL Management -->
+            <section class="links-section">
+
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">LINK MANAGEMENT</p>
+                        <h2>My Links</h2>
+                        <p>Manage and monitor all your shortened URLs.</p>
+                    </div>
+
+                    <span class="link-count">{{ total_links }} links</span>
+                </div>
+
+
+                <div class="dashboard-search">
+                    <span>⌕</span>
+
+                    <input
+                        type="text"
+                        id="urlSearch"
+                        placeholder="Search your links..."
+                        oninput="filterUrls()"
+                    >
+                </div>
+
+                <p id="searchMessage" class="search-message"></p>
+
+
+                {% if urls %}
+
+                    <div class="url-list">
+
+                        {% for url in urls %}
+
+                            <article class="dashboard-url-card"
+                                data-search="{{ (url[1] ~ ' ' ~ url[2]) | lower }}">
+
+                                <div class="url-card-main">
+
+                                    <div class="url-symbol">↗</div>
+
+                                    <div class="url-details">
+
+                                        <span class="url-card-label">DESTINATION URL</span>
+
+                                        <a href="{{ url[1] }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="original-link">
+                                            {{ url[1] }}
+                                        </a>
+
+                                        <div class="short-url-display">
+                                            <span class="short-url-label">SHORT LINK</span>
+
+                                            <a href="{{ base_url }}/{{ url[2] }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer">
+                                                {{ base_url }}/{{ url[2] }}
+                                            </a>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="url-card-stats">
+
+                                    <div class="url-stat">
+                                        <span>CLICKS</span>
+                                        <strong>{{ url[5] }}</strong>
+                                    </div>
+
+                                    <div class="url-stat">
+                                        <span>CREATED</span>
+                                        <strong>{{ url[3] or "N/A" }}</strong>
+                                    </div>
+
+                                    <div class="url-stat">
+                                        <span>EXPIRES</span>
+                                        <strong>{{ url[4] or "Never" }}</strong>
+                                    </div>
+
+                                </div>
+
+
+                                <div class="url-card-actions">
+
+                                    <button
+                                        type="button"
+                                        class="dashboard-copy-btn"
+                                        data-url="{{ base_url }}/{{ url[2] }}"
+                                        onclick="copyShortUrl(this)">
+                                        Copy link
+                                    </button>
+
+                                    <form method="POST"
+                                        action="{{ url_for('delete_url', url_id=url[0]) }}"
+                                        onsubmit="return confirm('Are you sure you want to delete this URL?');">
+
+                                        <button type="submit" class="dashboard-delete-btn">
+                                            Delete
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-state">
+                        <div class="empty-icon">↗</div>
+
+                        <h3>No links yet</h3>
+
+                        <p>You haven't created any shortened URLs. Start by creating your first one!</p>
+
+                        <a href="{{ url_for('home') }}" class="create-button">
+                            Create your first link
+                        </a>
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+            <footer class="dashboard-footer">
+                <span>Linkly © 2026</span>
+                <span>Make every link count.</span>
+            </footer>
+
+        </main>
 
     </div>
 
+
     <script>
+
     async function copyShortUrl(button) {
 
         const shortUrl = button.dataset.url;
@@ -134,7 +277,7 @@
             button.textContent = "Copied!";
 
             setTimeout(() => {
-                button.textContent = "Copy Short URL";
+                button.textContent = "Copy link";
             }, 2000);
 
         } catch (error) {
@@ -150,7 +293,7 @@
             .value.toLowerCase()
             .trim();
 
-        const urlCards = document.querySelectorAll(".url-card");
+        const urlCards = document.querySelectorAll(".dashboard-url-card");
 
         let visibleCount = 0;
 
@@ -159,26 +302,25 @@
             const searchableText = card.dataset.search;
 
             if (searchableText.includes(searchInput)) {
-
-                card.style.display = "block";
+                card.style.display = "flex";
                 visibleCount++;
-
             } else {
-
                 card.style.display = "none";
-
             }
 
         });
 
         const message = document.getElementById("searchMessage");
 
-        if (visibleCount === 0) {
+        if (searchInput === "") {
+            message.textContent = "";
+        } else if (visibleCount === 0) {
             message.textContent = "No matching URLs found.";
         } else {
             message.textContent = "Showing " + visibleCount + " URL(s).";
         }
     }
+
     </script>
 
 </body>

@@ -1,62 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width-device-width, initial-scale=1.0">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linkly | Smart URL Shortener</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 
-        <title>URL Shortener</title>
+<body class="home-page">
+    <div class="home-shell">
+        <header class="site-header">
+            <a href="{{ url_for('home') }}" class="brand">
+                <span class="brand-icon">↗</span>
+                <span>Linkly<span class="brand-dot">.</span></span>
+            </a>
 
-        <link rel="stylesheet" href="{{url_for('static', filename='style.css') }}">
-    </head>
+            <nav class="site-nav" aria-label="Main navigation">
+                {% if session.get('user_id') %}
+                    <span class="welcome-text">
+                        Hi, {{ session.get('username') }}!
+                    </span>
+                    <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                    <a href="{{ url_for('logout') }}" class="nav-button">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link">Log in</a>
+                    <a href="{{ url_for('register') }}" class="nav-button">Get started</a>
+                {% endif %}
+            </nav>
+        </header>
 
-    <body>
-        <div class="container">
+        <main>
+            <section class="hero">
+                <div class="eyebrow">
+                    <span class="eyebrow-dot"></span>
+                    YOUR LINKS, SIMPLIFIED
+                </div>
 
-            <h1>URL Shortener</h1>
-            <p>Convert your long URL into a short, easy-to-share link.</p>
+                <h1>
+                    Short links.<br>
+                    <span class="gradient-text">Big possibilities.</span>
+                </h1>
 
-            {% if session.get('user_id') %}
-
-                <p>
-                    Welcome, {{ session.get('username') }}!
-                    |
-                    <a href="{{ url_for('dashboard') }}">My Dashboard</a>
-                    |
-                    <a href="{{ url_for('logout') }}">Logout</a>
+                <p class="hero-description">
+                    Turn long, messy URLs into clean, shareable links.
+                    Generate QR codes and track your links—all in one place.
                 </p>
 
-            {% else %}
+                <div class="shortener-card">
+                    <div class="card-heading">
+                        <span class="card-icon">↗</span>
+                        <div>
+                            <h2>Shorten your link</h2>
+                            <p>Paste a long URL to get started</p>
+                        </div>
+                    </div>
 
-                <p class="auth-link">
-                    <a href="{{ url_for('login') }}">Login</a>
-                    |
-                    <a href="{{ url_for('register') }}">Create an account</a>
-                </p>
+                    {% if error %}
+                        <p class="error" role="alert">{{ error }}</p>
+                    {% endif %}
 
-            {% endif %}
+                    <form method="POST" class="shortener-form">
+                        <label for="url-input">Your destination URL</label>
+                        <div class="input-row">
+                            <input
+                                id="url-input"
+                                type="url"
+                                name="url"
+                                placeholder="https://example.com/your-long-url"
+                                required
+                            >
+                            <button type="submit" class="primary-button">
+                                Shorten URL <span aria-hidden="true">↗</span>
+                            </button>
+                        </div>
+                    </form>
 
-            {% if error %}
-            <p class="error">{{ error }}</p>
-            {% endif %}
-
-            <form method="POST">
-
-                <input type="text"  name="url"  placeholder="Enter your Long URL"  required>
-
-                <button type="submit">Shorten URL</button>
-            </form>
-
-            {% if short_url %}
-                <div class="result">
-                    <h2>Your Short URL</h2>
-
-                    <p class="open_link">
-                        <a href="{{ short_url }}" target="blank">
-                            {{ short_url}}
-                        </a>
+                    <p class="form-note">
+                        <span aria-hidden="true">✦</span>
+                        Simple, fast and easy to share
                     </p>
                 </div>
-            {% endif %}
-        </div>
-    </body>
+
+                {% if short_url %}
+                    <section class="result" aria-label="Your shortened link">
+                        <div class="result-header">
+                            <span class="success-icon">✓</span>
+                            <div>
+                                <h2>Your link is ready!</h2>
+                                <p>Share it anywhere or scan the QR code.</p>
+                            </div>
+                        </div>
+
+                        <div class="result-content">
+                            <div class="result-link-section">
+                                <span class="result-label">YOUR SHORT LINK</span>
+
+                                <a
+                                    href="{{ short_url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="short-link"
+                                >
+                                    {{ short_url }}
+                                </a>
+
+                                <button
+                                    type="button"
+                                    class="secondary-button"
+                                    id="copy-link-button"
+                                >
+                                    Copy link
+                                </button>
+                            </div>
+
+                            {% if qr_code_url %}
+                                <div class="qr-container">
+                                    <img
+                                        src="{{ qr_code_url }}"
+                                        alt="QR code for your shortened URL"
+                                        class="qr-image"
+                                    >
+                                    <a
+                                        href="{{ qr_code_url }}"
+                                        download="qrcode.png"
+                                        class="download-button"
+                                    >
+                                        ↓ Download QR
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </section>
+                {% endif %}
+            </section>
+
+            <section class="features" aria-label="Features">
+                <div class="feature">
+                    <span class="feature-icon">↗</span>
+                    <h3>Shorter links</h3>
+                    <p>Make every URL clean and easy to share.</p>
+                </div>
+
+                <div class="feature">
+                    <span class="feature-icon">▦</span>
+                    <h3>Instant QR codes</h3>
+                    <p>Turn your shortened links into scannable QR codes.</p>
+                </div>
+
+                <div class="feature">
+                    <span class="feature-icon">◫</span>
+                    <h3>Click analytics</h3>
+                    <p>Monitor link activity from your dashboard.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <span>Linkly © 2026</span>
+            <span>Make every link count.</span>
+        </footer>
+    </div>
+
+    <script>
+        const copyButton = document.getElementById("copy-link-button");
+
+        if (copyButton) {
+            copyButton.addEventListener("click", async () => {
+                const shortUrl = {{ short_url | tojson if short_url else 'null' }};
+
+                try {
+                    await navigator.clipboard.writeText(shortUrl);
+                    copyButton.textContent = "Copied!";
+                    setTimeout(() => {
+                        copyButton.textContent = "Copy link";
+                    }, 2000);
+                } catch (error) {
+                    copyButton.textContent = "Copy failed";
+                }
+            });
+        }
+    </script>
+</body>
 </html>

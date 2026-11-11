@@ -1,56 +1,93 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account | URL Shortener</title>
+
+    <title>Create Account | Linkly</title>
+
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="auth-page">
 
-    <div class="container">
+    <div class="auth-wrapper">
 
-        <h1>Create Account</h1>
-        <p>Join us and start shortening your URLs.</p>
+        <a href="{{ url_for('home') }}" class="brand auth-brand">
+            <span class="brand-icon">↗</span>
+            <span>Linkly<span class="brand-dot">.</span></span>
+        </a>
 
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
+        <div class="auth-card">
 
-        <form method="POST">
+            <div class="auth-icon">✦</div>
 
-            <input
-                type="text"
-                name="username"
-                placeholder="Choose a username"
-                required
-            >
+            <p class="auth-eyebrow">GET STARTED</p>
 
-            <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                required
-            >
+            <h1>Create your account.</h1>
 
-            <input
-                type="password"
-                name="password"
-                placeholder="Create a password (minimum 8 characters)"
-                minlength="8"
-                required
-            >
+            <p class="auth-description">
+                Join Linkly and start creating smarter, shorter links.
+            </p>
 
-            <button type="submit">Create Account</button>
+            {% if error %}
+                <p class="error" role="alert">{{ error }}</p>
+            {% endif %}
 
-        </form>
+            <form method="POST" class="auth-form">
 
-        <p>
-            Already have an account?
-            Login will be available soon!
+                <label for="username">Username</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Choose a username"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="email">Email address</label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                    required
+                >
+
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Minimum 8 characters"
+                    minlength="8"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <button type="submit" class="auth-submit">
+                    Create Account <span>↗</span>
+                </button>
+
+            </form>
+
+            <div class="auth-divider"></div>
+
+            <p class="auth-switch">
+                Already have an account?
+                <a href="{{ url_for('login') }}">Login here</a>
+            </p>
+
+        </div>
+
+        <p class="auth-footer">
+            Linkly © 2026 · Make every link count.
         </p>
 
     </div>
