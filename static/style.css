@@ -1548,3 +1548,27 @@ button:hover{
         font-size: 25px;
     }
 }
+
+/* Link expiration selector */
+
+.expiration-select {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #36405a;
+    border-radius: 10px;
+    background: #0d1426;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+}
+
+.expiration-select:focus {
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.expiration-select option {
+    background: #151c30;
+    color: white;
+}

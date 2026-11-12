@@ -61,6 +61,7 @@
 
                     <form method="POST" class="shortener-form">
                         <label for="url-input">Your destination URL</label>
+
                         <div class="input-row">
                             <input
                                 id="url-input"
@@ -69,10 +70,20 @@
                                 placeholder="https://example.com/your-long-url"
                                 required
                             >
+
                             <button type="submit" class="primary-button">
                                 Shorten URL <span aria-hidden="true">↗</span>
                             </button>
                         </div>
+
+                        <label for="expiration">Link expiration</label>
+
+                        <select name="expiration" id="expiration" class="expiration-select">
+                            <option value="never">Never expires</option>
+                            <option value="1hour">1 hour</option>
+                            <option value="24hours">24 hours</option>
+                            <option value="7days">7 days</option>
+                        </select>
                     </form>
 
                     <p class="form-note">

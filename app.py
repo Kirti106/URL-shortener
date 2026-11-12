@@ -14,7 +14,28 @@ import sqlite3
 import os
 import qrcode
 
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
 app = Flask(__name__)
+
+@app.template_filter("format_datetime")
+def format_datetime(value):
+
+    if not value:
+        return "Never"
+
+    try:
+        dt = datetime.fromisoformat(value)
+
+        # Convert UTC time to Indian Standard Time
+        dt = dt.astimezone(ZoneInfo("Asia/Kolkata"))
+
+        return dt.strftime("%d %b %Y, %I:%M %p")
+
+    except (ValueError, TypeError):
+        return value
+
 app.secret_key = "dev-only-change-this-secret-key"
 
 def login_required(route_function):
@@ -55,14 +76,19 @@ def init_db():
     connection.commit()
     connection.close()
 
-def save_url(original_url, short_code, user_id=None):
+def save_url(original_url, short_code, user_id=None, expires_at=None):
 
     connection = sqlite3.connect("urls.db")
 
     connection.execute("""
-        INSERT INTO urls (original_url, short_code, user_id)
-        VALUES (?, ?, ?)
-    """, (original_url, short_code, user_id))
+        INSERT INTO urls (
+            original_url,
+            short_code,
+            user_id,
+            expires_at
+        )
+        VALUES (?, ?, ?, ?)
+    """, (original_url, short_code, user_id, expires_at))
 
     connection.commit()
     connection.close()
@@ -258,30 +284,69 @@ def delete_url(url_id):
 
     return redirect("/dashboard")
 
-
-@app.route("/", methods=["GET" , "POST"])
+@app.route("/", methods=["GET", "POST"])
 def home():
 
     if request.method == "POST":
+
         url = request.form["url"].strip()
 
         if not url:
-            return render_template("index.html", error="Please enter a URL.")
+            return render_template(
+                "index.html",
+                error="Please enter a URL."
+            )
 
         if not valid_url(url):
-            return render_template("index.html", error="Please enter a valid URL starting with https:// or http://.")
+            return render_template(
+                "index.html",
+                error="Please enter a valid URL starting with https:// or http://."
+            )
 
+        # Get expiration selection
+        expiration = request.form.get("expiration", "never")
+
+        # Calculate expiration date
+        expiration_options = {
+            "1hour": timedelta(hours=1),
+            "24hours": timedelta(hours=24),
+            "7days": timedelta(days=7)
+        }
+
+        if expiration == "never":
+            expires_at = None
+
+        elif expiration in expiration_options:
+            expires_at = (
+                datetime.now(timezone.utc)
+                + expiration_options[expiration]
+            ).isoformat()
+
+        else:
+            return render_template(
+                "index.html",
+                error="Invalid expiration option."
+            )
+
+        # Generate unique short code
         short_code = gen_short_code()
 
         while short_code_exists(short_code):
             short_code = gen_short_code()
 
+        # Save URL with expiration
         user_id = session.get("user_id")
-        save_url(url, short_code, user_id)
+
+        save_url(
+            url,
+            short_code,
+            user_id,
+            expires_at
+        )
 
         short_url = f"http://127.0.0.1:5000/{short_code}"
 
-        # Generate QR code for the shortened URL
+        # Generate QR code
         qr_folder = os.path.join("static", "qrcodes")
         os.makedirs(qr_folder, exist_ok=True)
 
@@ -300,9 +365,6 @@ def home():
             qr_code_url=qr_code_url
         )
 
-        print("Valid URL : ",url)
-        print("Short Code : ", short_code)
-            
     return render_template("index.html")
 
 
@@ -311,37 +373,51 @@ def redirect_url(short_code):
 
     connection = sqlite3.connect("urls.db")
 
-    # Find the original URL and its database ID
+    # Fetch URL details, including expiration date
     result = connection.execute("""
-        SELECT id, original_url
+        SELECT id, original_url, expires_at
         FROM urls
         WHERE short_code = ?
     """, (short_code,)).fetchone()
 
-    if result:
-
-        url_id = result[0]
-        original_url = result[1]
-
-        # Record this visit
-        connection.execute("""
-            INSERT INTO click_events
-            (url_id, referrer, user_agent)
-            VALUES (?, ?, ?)
-        """, (
-            url_id,
-            request.referrer,
-            request.user_agent.string
-        ))
-
-        connection.commit()
+    if not result:
         connection.close()
+        return "Short URL not found.", 404
 
-        return redirect(original_url)
+    url_id = result[0]
+    original_url = result[1]
+    expires_at = result[2]
 
+    # Check whether the link has expired
+    if expires_at:
+
+        expiry_time = datetime.fromisoformat(expires_at)
+
+        # Handle older timestamps without timezone information
+        if expiry_time.tzinfo is None:
+            expiry_time = expiry_time.replace(tzinfo=timezone.utc)
+
+        current_time = datetime.now(timezone.utc)
+
+        if current_time >= expiry_time:
+            connection.close()
+            return render_template("expired.html"), 410
+
+    # Record click only if the link is active
+    connection.execute("""
+        INSERT INTO click_events
+        (url_id, referrer, user_agent)
+        VALUES (?, ?, ?)
+    """, (
+        url_id,
+        request.referrer,
+        request.user_agent.string
+    ))
+
+    connection.commit()
     connection.close()
 
-    return "Short URL not found.", 404
+    return redirect(original_url)
 
 init_db()
 
